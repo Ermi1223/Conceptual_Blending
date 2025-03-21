@@ -2,20 +2,20 @@
 ! (import! &self conceptual_blending)
 
  ;; Ask the GPT agent with two explicit concepts for different networks
-! (gpt_simplex "Music" "Painting")
-! (gpt_mirror "Light" "Wisdom")
-! (gpt_single "Nature" "Technology")
-! (gpt_double "Emotion" "Mathematics")
+! (let $v (gpt_simplex "Music" "Painting") (get-metatype $v))
+; ! (gpt_mirror "Light" "Wisdom")
+; ! (gpt_single "Nature" "Technology")
+; ! (gpt_double "Emotion" "Mathematics")
 
  ;; Combine GPT with other agents and workflows
  ;; Store the blended knowledge (GPT response) from each network into the knowledge space
-! (add-reduct &self (gpt_simplex "Music" "Painting"))
-! (add-reduct &self (gpt_mirror "Light" "Wisdom"))
-! (add-reduct &self (gpt_single "Nature" "Technology"))
-! (add-reduct &self (gpt_double "Emotion" "Mathematics"))
+; ! (add-reduct &self (gpt_simplex "Music" "Painting"))
+; ! (add-reduct &self (gpt_mirror "Light" "Wisdom"))
+; ! (add-reduct &self (gpt_single "Nature" "Technology"))
+; ! (add-reduct &self (gpt_double "Emotion" "Mathematics"))
 
  ;; Retrieve and list all knowledge stored in the current space
-! (match &self ($x) $x)
+; ! (match &self ($x) $x)
 
 
 ; --------------------------------------------
@@ -44,7 +44,7 @@
 
 ; --------------------------------------
 ;; Load the stored knowledge space
-! (import! &test_space data)
+; ! (import! &test_space data)
 
 ;; Test blending with sentences from the stored space with pattern matching
 ; ! (gpt_simplex (match &test_space (nature $x) $x) (match &test_space (emotion $y) $y))
@@ -70,11 +70,11 @@
 
 
 ;; Test blending with sentences from the stored space with `let` since the matches were not being executed first
-! (let $knowledge_example (match &test_space (knowledge $y) $y)
-    (let $nature_example (match &test_space (nature $x) $x)
-        (gpt_simplex $knowledge_example $nature_example)
-    )
-)
+; ! (let $knowledge_example (match &test_space (knowledge $y) $y)
+;     (let $nature_example (match &test_space (nature $x) $x)
+;         (gpt_simplex $knowledge_example $nature_example)
+;     )
+; )
 
 ; ; Output: Getting expected result interms of blending the given atoms
 ; ; (simplexBlend (blend mathematicsPatterns oceanStories) narrativePatterns)
@@ -91,7 +91,7 @@
 ; ; [[`, (simplexBlend (blend historyMemory civilization riverPathCarving) temporalErosion), `], [`, (simplexBlend (blend historyMemory civilization forestBreathesLife) ecologicalMemory), `], [`, (simplexBlend (blend historyMemory oceanStories) civilizationWhispers), `], [`, (simplexBlend (blend philosophy riverPath) existentialErosion), `], [`, (simplexBlend (blend philosophy forest) existentialEcology), `], [`, (simplexBlend (blend philosophy oceanWhispers) existentialTides), `], [`, (simplexBlend (blend mathematics riverPath) patternErosion), `], [`, (simplexBlend (blend mathematics forest) patternEcology), `], [(simplexBlend (blend mathematicsPatterns oceanStories) narrativePatterns)]]
 
 
-! (___________________________)
+; ! (___________________________)
 
 ; metta function to blend all atoms in a given list
 ; (= (blend_from_list $network $list)
@@ -107,15 +107,15 @@
 
 ; metta function to blend all atoms in given space using let*
 ; limit input list for testing
-(= (blend_from_space $network $space)
-    (let*
-        (
-            ($knowledge_example (match $space (knowledge $y) $y))
-            ($nature_example (match $space (nature $x) $x))
-        )
-        ($network $knowledge_example $nature_example)
-    )
-)
+; (= (blend_from_space $network $space)
+;     (let*
+;         (
+;             ($knowledge_example (match $space (knowledge $y) $y))
+;             ($nature_example (match $space (nature $x) $x))
+;         )
+;         ($network $knowledge_example $nature_example)
+;     )
+; )
 
 ; (= (blend_from_space $network $space)
 ;     (let*
@@ -128,5 +128,14 @@
 ; )
 
 
-! (import! &testSpace data)
-! (blend_from_space gpt_simplex &testSpace)
+; ! (import! &testSpace data)
+; ! (blend_from_space gpt_simplex &testSpace)
+;! (gpt_vector "Spider" "Man")
+;! (gpt_vector "Bat" "Man")
+;! (gpt_vector "messi" "ronaldo")
+;! (gpt_vector "music" "painitng")
+;! (gpt_vector "bird" "car")
+;! (gpt_vector "fish" "car")
+
+
+
