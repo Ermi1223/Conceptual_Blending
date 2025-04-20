@@ -1,193 +1,146 @@
+! (import! &self conceptual_blending)
+! (import! &self list-op-utils)
+
+
+(: Concept Concept)
+
 ; ###################### Helper functions ##########################
-(=(get-properties $concept)
-    (let*(
-        ($full-concept (superpose $concept))
+(=(get-prop-value-pairs $concept)
+    (let (Concept $x $y) $concept (cdr-atom $y))
+)
+;! (get-prop-value-pairs (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))))
+; Output [((mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))]
+
+
+(= (get-property $prop-value-pair)
+    (let ($x $y) $prop-value-pair $x)
+)
++;! (get-property (mobility 0.9))
++; Output [mobility]
+
+
+
+(= (get-properties $prop-value-pairs)
+    (map-atom $prop-value-pairs $x (get-property $x))
+)
+;!(get-properties ((mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7)))
+; Output [(mobility intelligence web-creation social-structure predatory-behavior communication symbolism physical-strength)]
+
+
+
+(= (get-value $property)
+    (let ($x $y) $property $y)
+)
+;! (get-value (mobility 0.9))
+; Output [0.9]
+
+
+(= (get-values $properties)
+    (map-atom $properties $x (get-value $x))
+)
+;! (get-values (get-prop-value-pairs (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7)))))
+; Output [(0.9 0.9 0.0 0.8 0.2 0.9 0.7 0.7)]
+
+; ###################### Calculate product of two properites ##########################
+(= (property-product $properties1 $properties2)
+    (let
+        ($property1values $property2values $properties)
+        (collapse(superpose((get-values $properties1) (get-values $properties2) (get-properties $properties1))))
+        (tuple-multiply $property1values $property2values $properties)
     )
-        (if (== (get-metatype $full-concept) Expression)
-            (let $property (cdr-atom $full-concept)
-                $property)
+)
+;! (property-product ((mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7)) ((mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3)))
+; Output [((mobility 0.7200000000000001) (intelligence 0.18000000000000002) (web-creation 0.0) (social-structure 0.24) (predatory-behavior 0.18000000000000002) (communication 0.36000000000000004) (symbolism 0.42) (physical-strength 0.21))]
+
+; ###################### Calculate Number of properties #####################
+(: get-number-of-properties (-> Concept Number))
+(=(get-number-of-properties $concept)
+    (let*(
+        ($a $concept)
+        ($b (superpose $a))
+    )
+        (if (== (get-metatype $b) Expression)
+            (let $c (cdr-atom $b)
+                (size-atom $c))
             (empty)
         )
     )
 )
-; ! (get-properties (Concept Spider@Man (Property (web-creation 1.0) (intelligence 0.4) (physical-strength 0.6) (mobility 0.8) (predatory-behavior 1.0) (social-structure 0.2) (symbolism 0.7) (tool-use 0.1))))
-; Output [((web-creation 1.0) (intelligence 0.4) (physical-strength 0.6) (mobility 0.8) (predatory-behavior 1.0) (social-structure 0.2) (symbolism 0.7) (tool-use 0.1))]
+;!(get-number-of-properties (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))))
+; Output [8]
 
-
-(= (get-num $property)
-    (let*(
-        ($value (cdr-atom $property))
-        ($num (car-atom $value))
-    )
-        $num
-    )
+; ################### Convert Number to Decimal ##########################
+(: decimal (-> Number Number))
+(=(decimal $number)
+    (+ $number 0.0)
 )
-; ! (get-num (web-creation 1.0))
+;!(decimal 1)
 ; Output [1.0]
 
-
-(=(get-values $properties)
+; ###################### Calculate Probability ##############################
+(: property-probability (-> Concept Number))
+(=(property-probability $concept)
     (let*(
-        ($property (car-atom $properties))
-        ($num (get-num $property))
-        ($num-properties (size-atom $properties))
+        ($numberofprops (get-number-of-properties $concept))
+        ($probability (/ 1.0 (decimal $numberofprops)))
     )
-        (if (not (== $num-properties 1))
-            (let*(
-                ($tail-properties (cdr-atom $properties))
-                ($call-back (get-values $tail-properties))
-            )
-                (cons-atom $num $call-back)
-            )
-            ($num)
-        )
+    $probability
     )
 )
-; ! (get-values (get-properties (Concept Spider@Man (Property (web-creation 1.0) (intelligence 0.4) (physical-strength 0.6) (mobility 0.8) (predatory-behavior 1.0) (social-structure 0.2) (symbolism 0.7) (tool-use 0.1)))))
-; Output [(1.0 0.4 0.6 0.8 1.0 0.2 0.7 0.1)]
-
-
-; ###################### Calculate product of two properites ##########################
-(= (property-product $properties1 $properties2)
-    (let*(
-        ($property1 (car-atom $properties1))
-        ($property2 (car-atom $properties2))
-        ($num1 (get-num $property1))
-        ($num2 (get-num $property2))
-        ($num-properties (size-atom $properties1))
-        ($product ((car-atom $property1) (* $num1 $num2)))
-    )
-        (if (not (== $num-properties 1))
-            (let*(
-                ($tail-properties1 (cdr-atom $properties1))
-                ($tail-properties2 (cdr-atom $properties2))
-                ($call-back (property-product $tail-properties1 $tail-properties2))
-            )
-                (cons-atom $product $call-back)
-            )
-            ($product)
-        )
-    )
-)
-; ! (property-product ((web-creation 0.1) (intelligence 0.2) (physical-strength 0.6) (mobility 0.8) (predatory-behavior 1.0) (social-structure 0.2) (symbolism 0.7) (tool-use 0.1)) ((web-creation 1.0) (intelligence 0.4) (physical-strength 0.1) (mobility 0.8) (predatory-behavior 1.0) (social-structure 0.2) (symbolism 0.7) (tool-use 0.1)))
-; Output [((web-creation 0.1) (intelligence 0.08000000000000002) (physical-strength 0.06) (mobility 0.6400000000000001) (predatory-behavior 1.0) (social-structure 0.04000000000000001) (symbolism 0.48999999999999994) (tool-use 0.010000000000000002))]
+;!(property-probability (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))))
+; Output [0.125]
 
 
 ; ###################### Calculate Degree function ##########################
+(: property-degree (-> Concept Number))
 (=(property-degree $concept)
     (let*(
-        ($properties (get-properties $concept))
-        ($num-properties (size-atom $properties))
-        ($probability (/ 1.0 $num-properties))
+        ($probability (property-probability $concept))
         ($degree (* -1 (log-math 10 $probability)))
     )
-        $degree
+        ((py-atom round) $degree 2)
     )
 )
-; ! (property-degree (Concept Spider@Man (Property (web-creation 1.0) (intelligence 0.4) (physical-strength 0.6) (mobility 0.8) (predatory-behavior 1.0) (social-structure 0.2) (symbolism 0.7) (tool-use 0.1))))
+! (property-degree (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))))
 ; Output [0.9030899869919434]
-
-
-; ###################### Calculate min and max for Properties ##########################
-(= (min-property $properties1 $properties2)
-    (let*(
-        ($property1 (car-atom $properties1))
-        ($property2 (car-atom $properties2))
-        ($num1 (get-num $property1))
-        ($num2 (get-num $property2))
-        ($num-properties (size-atom $properties1))
-        ($min-prop ((car-atom $property1) (min-atom ($num1 $num2))))
-    )
-        (if (not (== $num-properties 1))
-            (let*(
-                ($tail-properties1 (cdr-atom $properties1))
-                ($tail-properties2 (cdr-atom $properties2))
-                ($call-back (min-property $tail-properties1 $tail-properties2))
-            )
-                (cons-atom $min-prop $call-back)
-            )
-            ($min-prop)
-        )
-    )
-)
-; ! (min-property ((web-creation 0.1) (intelligence 0.2) (physical-strength 0.6) (mobility 0.8) (predatory-behavior 1.0) (social-structure 0.2) (symbolism 0.7) (tool-use 0.1)) ((web-creation 1.0) (intelligence 0.4) (physical-strength 0.1) (mobility 0.8) (predatory-behavior 1.0) (social-structure 0.2) (symbolism 0.7) (tool-use 0.1)))
-; Output [((web-creation 0.1) (intelligence 0.2) (physical-strength 0.1) (mobility 0.8) (predatory-behavior 1.0) (social-structure 0.2) (symbolism 0.7) (tool-use 0.1))]
-
-
-(= (max-property $properties1 $properties2)
-    (let*(
-        ($property1 (car-atom $properties1))
-        ($property2 (car-atom $properties2))
-        ($num1 (get-num $property1))
-        ($num2 (get-num $property2))
-        ($num-properties (size-atom $properties1))
-        ($max-prop ((car-atom $property1) (max-atom ($num1 $num2))))
-    )
-        (if (not (== $num-properties 1))
-            (let*(
-                ($tail-properties1 (cdr-atom $properties1))
-                ($tail-properties2 (cdr-atom $properties2))
-                ($call-back (max-property $tail-properties1 $tail-properties2))
-            )
-                (cons-atom $max-prop $call-back)
-            )
-            ($max-prop)
-
-        )
-    )
-)
-; ! (max-property ((web-creation 0.1) (intelligence 0.2) (physical-strength 0.6) (mobility 0.8) (predatory-behavior 1.0) (social-structure 0.2) (symbolism 0.7) (tool-use 0.1)) ((web-creation 1.0) (intelligence 0.4) (physical-strength 0.1) (mobility 0.8) (predatory-behavior 1.0) (social-structure 0.2) (symbolism 0.7) (tool-use 0.1)))
-; Output [((web-creation 1.0) (intelligence 0.4) (physical-strength 0.6) (mobility 0.8) (predatory-behavior 1.0) (social-structure 0.2) (symbolism 0.7) (tool-use 0.1))]
 
 
 ; ###################### Calculate min and max for Concepts ##########################
 (=(property-min $concept1 $concept2)
     (let*(
-        ($properties1 (get-properties $concept1))
-        ($properties2 (get-properties $concept2))
+        (($properties1 $properties2) (collapse(superpose((get-prop-value-pairs $concept1) (get-prop-value-pairs $concept2)))))
+        (($properties1values $properties2values $properties) (collapse(superpose((get-values $properties1) (get-values $properties2) (get-properties $properties1)))))
     )
-        (min-property $properties1 $properties2)
+        (min-elements $properties1values $properties2values $properties)
     )
 )
-; ! (property-min (Concept Spider@Man (Property (web-creation 0.1) (intelligence 0.3) (physical-strength 0.6) (mobility 0.8) (predatory-behavior 1.0) (social-structure 0.2) (symbolism 0.7) (tool-use 0.1))) (Concept Spider@Man (Property (web-creation 1.0) (intelligence 0.4) (physical-strength 0.2) (mobility 0.8) (predatory-behavior 1.0) (social-structure 0.2) (symbolism 0.7) (tool-use 0.1))))
-; Output [((web-creation 0.1) (intelligence 0.3) (physical-strength 0.2) (mobility 0.8) (predatory-behavior 1.0) (social-structure 0.2) (symbolism 0.7) (tool-use 0.1))]
+;!(property-min (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))) (Concept Spider@Man (Property (mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3))))
+; Output [((mobility 0.8) (intelligence 0.2) (web-creation 0.0) (social-structure 0.3) (predatory-behavior 0.2) (communication 0.4) (symbolism 0.6) (physical-strength 0.3))]
 
 
 (=(property-max $concept1 $concept2)
     (let*(
-        ($properties1 (get-properties $concept1))
-        ($properties2 (get-properties $concept2))
+        (($properties1 $properties2) (collapse(superpose((get-prop-value-pairs $concept1) (get-prop-value-pairs $concept2)))))
+        (($properties1values $properties2values $properties) (collapse(superpose((get-values $properties1) (get-values $properties2) (get-properties $properties1)))))
     )
-        (max-property $properties1 $properties2)
+        (max-elements $properties1values $properties2values $properties)
     )
 )
-; ! (property-max (Concept Spider@Man (Property (web-creation 0.1) (intelligence 0.3) (physical-strength 0.6) (mobility 0.8) (predatory-behavior 1.0) (social-structure 0.2) (symbolism 0.7) (tool-use 0.1))) (Concept Spider@Man (Property (web-creation 1.0) (intelligence 0.4) (physical-strength 0.2) (mobility 0.8) (predatory-behavior 1.0) (social-structure 0.2) (symbolism 0.7) (tool-use 0.1))))
-; Output [((web-creation 1.0) (intelligence 0.4) (physical-strength 0.6) (mobility 0.8) (predatory-behavior 1.0) (social-structure 0.2) (symbolism 0.7) (tool-use 0.1))]
+;!(property-max (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))) (Concept Spider@Man (Property (mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3))))
+; Output [((mobility 0.9) (intelligence 0.9) (web-creation 1.0) (social-structure 0.8) (predatory-behavior 0.9) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))]
 
 
 ; ###################### Calculate mu emergence ##########################
 (= (mu-emergence $property-degree $properties-max)
-    (let*(
-        ($property (car-atom $properties-max))
-        ($num (get-num $property))
-        ($num-properties (size-atom $properties-max))
-        ($property-minus-num (- $property-degree $num))
-        ($non-zero (max-atom ($property-minus-num 0)))
-        ($result ((car-atom $property) $non-zero))
-    )
-        (if (not (== $num-properties 1))
-            (let*(
-                ($tail-properties (cdr-atom $properties-max))
-                ($call-back (mu-emergence $property-degree $tail-properties))
-            )
-                (cons-atom $result $call-back)
-            )
-            ($result)
-        )
+    (
+        let
+        ($propertiesvalues $properties)
+        (collapse(superpose((get-values $properties-max) (get-properties $properties-max))))
+        (tuple-substract $property-degree $propertiesvalues $properties)
     )
 )
-; ! (mu-emergence 0.9030899869919434 (property-max (Concept Spider@Man (Property (web-creation 0.1) (intelligence 0.3) (physical-strength 0.6) (mobility 0.8) (predatory-behavior 1.0) (social-structure 0.2) (symbolism 0.7) (tool-use 0.1))) (Concept Spider@Man (Property (web-creation 1.0) (intelligence 0.4) (physical-strength 0.2) (mobility 0.8) (predatory-behavior 1.0) (social-structure 0.2) (symbolism 0.7) (tool-use 0.1)))))
-; Output [((web-creation 0.0) (intelligence 0.5030899869919434) (physical-strength 0.30308998699194345) (mobility 0.10308998699194338) (predatory-behavior 0.0) (social-structure 0.7030899869919434) (symbolism 0.20308998699194347) (tool-use 0.8030899869919434))]
+;! (mu-emergence 0.9030899869919434 (property-max (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))) (Concept Spider@Man (Property (mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3)))))
+; Output [((mobility 0.0030899869919434053) (intelligence 0.0030899869919434053) (web-creation 0.0) (social-structure 0.10308998699194338) (predatory-behavior 0.0030899869919434053) (communication 0.0030899869919434053) (symbolism 0.20308998699194347) (physical-strength 0.20308998699194347))]
 
 ; ! (let*(
 ;         ($concept1 (Concept Spider@Man (Property (web-creation 0.1) (intelligence 0.3) (physical-strength 0.6) (mobility 0.8) (predatory-behavior 1.0) (social-structure 0.2) (symbolism 0.7) (tool-use 0.1))))
@@ -208,21 +161,51 @@
         ($product-emer-min-nums (get-values $product-emer-min))
         ($product-emer-min-summation (foldl-atom $product-emer-min-nums 0 $acc $val (+ $acc $val)))
         ($num-properties (size-atom $product-emer-min))
-        ($1-over-prop (/ 1.0 $num-properties))
+        ($1-over-prop (/ 1.0 (decimal $num-properties)))
         ($1-over-prop-summation (* $1-over-prop $product-emer-min-summation))
     )
         (min-atom ($1-over-prop-summation 1))
     )
 )
 ; ! (let*(
-;         ($concept1 (Concept Spider@Man (Property (web-creation 0.1) (intelligence 0.3) (physical-strength 0.6) (mobility 0.8) (predatory-behavior 1.0) (social-structure 0.2) (symbolism 0.7) (tool-use 0.1))))
-;         ($concept2 (Concept Spider@Man (Property (web-creation 1.0) (intelligence 0.4) (physical-strength 0.2) (mobility 0.8) (predatory-behavior 1.0) (social-structure 0.2) (symbolism 0.7) (tool-use 0.1))))
-;         ($degree (property-degree $concept1))
-;         ($max (property-max $concept1 $concept2))
-;         ($min (property-min $concept1 $concept2))
-;         ($calculated-mu-emergence (mu-emergence $degree $max))
-;         ($calculated-mu-hqblend (mu-hqblend $calculated-mu-emergence $min))
-;     )
-;     $calculated-mu-hqblend
+;     ($concept1 (Concept Man@Spider (Property (mobility 0.9) (intelligence 0.9) (web-creation 0.0) (social-structure 0.8) (predatory-behavior 0.2) (communication 0.9) (symbolism 0.7) (physical-strength 0.7))))
+;     ($concept2 (Concept Spider@Man (Property (mobility 0.8) (intelligence 0.2) (web-creation 1.0) (social-structure 0.3) (predatory-behavior 0.9) (communication 0.4) (symbolism 0.6) (physical-strength 0.3))))
+;     ($degree (property-degree $concept1))
+;     ($max (property-max $concept1 $concept2))
+;     ($min (property-min $concept1 $concept2))
+;     ($calculated-mu-emergence (mu-emergence $degree $max))
+;     ($calculated-mu-hqblend (mu-hqblend $calculated-mu-emergence $min))
 ; )
-; Output [0.08213837126018374]
+; $calculated-mu-hqblend
+; )
+;Output [0.027331495447180196]
+
+
+(= (blend $input1 $input2)
+    (let*(
+        ($concepts (gpt_vector $input1 $input2))
+        ($concept1 (car-atom $concepts))
+        ($wrapped-concept2 (cdr-atom $concepts))
+        ($concept2 (car-atom $wrapped-concept2))
+        ($degree (property-degree $concept1))
+        ($max (property-max $concept1 $concept2))
+        ($calculated-mu-emergence (mu-emergence $degree $max))
+        ($min (property-min $concept1 $concept2))
+        ($calculated-mu-hqblend (mu-hqblend $calculated-mu-emergence $min))
+        ($concept-pair (let (Concept $x $y) $concept1 $x))
+    )
+        (if (> $calculated-mu-hqblend 0)
+            (let*(
+                ($network (gpt_network_selector $concept-pair))
+            )
+                (if (not (noreduce-eq $network None))
+                    ($network $concept-pair $calculated-mu-emergence)
+                    (empty)
+                )
+            )
+            (empty)
+        )
+    )
+)
+; ! (blend "Bat" "Man")
+; [(doubleScope (expand Bat Man) BatMan (extended NocturnalSymbolicHero))]
