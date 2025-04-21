@@ -52,8 +52,8 @@ VECTOR_EXTRACTION_PROMPT = """
     - **Ensure exactly 8 properties are listed for each concept.**
     - **Return only two lines in this format. Avoid explanations.**
     - Maintain MeTTa-style syntax and spacing.
-    - Do **not** return explanations or backticks (```).
+    - Avoid returning explanations or backticks (```).
     - **Make sure it is wrapped with bracket () like ((Concept '.....')(Concept '......'))**
-    - **Avoid wrapping it in**
+   
 
 """
