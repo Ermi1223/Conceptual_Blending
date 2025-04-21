@@ -25,15 +25,6 @@
         ($ee (car-atom $ff))
         ($oo (cdr-atom $ee))
         ($zz (cdr-atom $oo))
-        ; ($head (get-metatype $pp))
-
-        
-        
-       
-
-
-
-      
     )
   $zz
     
